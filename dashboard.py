@@ -219,9 +219,9 @@ def create_plot(df):
     )
     return fig
 def main():
-    st.set_page_config(page_title="Trader Composition", layout="wide")
+    st.set_page_config(page_title="Commodity Futures Trader Dynamics: A dive into CFTC Data", layout="wide")
     
-    st.title("Commodity Futures Trader Composition Analysis")
+    st.title("Commodity Futures Trader Market Composition Dynamics: A dive into CFTC Data")
     st.markdown("""
     Interactive visualization of trader positions across major commodity futures markets
     """)
