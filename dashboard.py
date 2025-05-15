@@ -218,7 +218,6 @@ def create_plot(df):
         yaxis=dict(range=[0, 100], tickvals=[0, 25, 50, 75, 100])
     )
     return fig
-
 def main():
     st.set_page_config(page_title="Trader Composition", layout="wide")
     
@@ -231,69 +230,63 @@ def main():
     df = load_data()
     simple_df = load_simple_data()
 
-    # Date range selector
-    min_date = df['Report_Date_as_MM_DD_YYYY'].min()
-    max_date = df['Report_Date_as_MM_DD_YYYY'].max()
-    
-    min_date_simple = simple_df['Report_Date_as_MM_DD_YYYY'].min()
-    max_date_simple = simple_df['Report_Date_as_MM_DD_YYYY'].max()
+    # Date range selector for Non-Disaggregated data
+    st.subheader("CFTC Non-Disaggregated Futures Only Reports")
+    with st.container():
+        st.markdown(simple_explanation_1, unsafe_allow_html=True)
+        st.latex(r"\text{Gross Position} = \text{Long} + \text{Short} + 2 \times \text{Spread}")
+        st.markdown(simple_explanation_2, unsafe_allow_html=True)
+        st.latex(r"\text{Category \%} = \frac{\text{Gross Position}}{2 \times \text{Open Interest}} \times 100")
+        st.markdown(simple_explanation_3, unsafe_allow_html=True)
 
-    with st.sidebar:
-        st.header("Filters")
+        # Date range filter
+        min_date_simple = simple_df['Report_Date_as_MM_DD_YYYY'].min()
+        max_date_simple = simple_df['Report_Date_as_MM_DD_YYYY'].max()
         start_date_simple, end_date_simple = st.date_input(
-            "Select date range for Fig. 1 CFTC Non-Disaggregated data:",
+            "Select date range for Non-Disaggregated data:",
             value=(min_date_simple, max_date_simple),
             min_value=min_date_simple,
             max_value=max_date_simple
         )
 
+        # Filter data
+        filtered_simple_df = simple_df[
+            (simple_df['Report_Date_as_MM_DD_YYYY'].dt.date >= start_date_simple) &
+            (simple_df['Report_Date_as_MM_DD_YYYY'].dt.date <= end_date_simple)
+        ]
 
+        # Plot
+        st.plotly_chart(create_simple_plot(filtered_simple_df), use_container_width=True)
+
+    # Date range selector for Disaggregated data
+    st.subheader("CFTC Disaggregated Futures Only Reports")
+    with st.container():
+        st.markdown(disaggregated_explanation_1, unsafe_allow_html=True)
+        st.latex(r"\text{Gross Position} = \text{Long} + \text{Short} + 2 \times \text{Spread}")
+        st.markdown(disaggregated_explanation_2, unsafe_allow_html=True)
+        st.latex(r"\text{Gross Position} = \text{Long} + \text{Short}")
+        st.markdown(disaggregated_explanation_3, unsafe_allow_html=True)
+        st.latex(r"\text{Category \%} = \frac{\text{Gross Position}}{2 \times \text{Open Interest}} \times 100")
+        st.markdown(disaggregated_explanation_4, unsafe_allow_html=True)
+
+        # Date range filter
+        min_date = df['Report_Date_as_MM_DD_YYYY'].min()
+        max_date = df['Report_Date_as_MM_DD_YYYY'].max()
         start_date, end_date = st.date_input(
-            "Select date range for Fig. 2 CFTC Disaggregated DAta:",
+            "Select date range for Disaggregated data:",
             value=(min_date, max_date),
             min_value=min_date,
             max_value=max_date
         )
-        
-    
-    # Filter data
-    filtered_df = df[
-        (df['Report_Date_as_MM_DD_YYYY'].dt.date >= start_date) &
-        (df['Report_Date_as_MM_DD_YYYY'].dt.date <= end_date)
-    ]
 
-    filtered_simple_df = simple_df[
-        (simple_df['Report_Date_as_MM_DD_YYYY'].dt.date >= start_date_simple) &
-        (simple_df['Report_Date_as_MM_DD_YYYY'].dt.date <= end_date_simple)
-    ]
-    
-    # Show simple plot
-    st.subheader("CFTC Non-Disaggregated Futures Only Reports")
-    st.markdown(simple_explanation_1, unsafe_allow_html=True)
-    st.latex(r"\text{Gross Position} \text{Long} + \text{Short} + 2 \times \text{Spread}") # need  \text{Gross Position} = \text{Long} + \text{Short} + 2 \times \text{Spread}
-    st.markdown(simple_explanation_2, unsafe_allow_html=True)
-    st.latex(r"\text{Category \%} = \frac{\text{Gross Position}}{2 \times \text{Open Interest}} \times 100")
-    st.markdown(simple_explanation_3, unsafe_allow_html=True)
-    st.plotly_chart(create_simple_plot(filtered_simple_df), use_container_width=True)
+        # Filter data
+        filtered_df = df[
+            (df['Report_Date_as_MM_DD_YYYY'].dt.date >= start_date) &
+            (df['Report_Date_as_MM_DD_YYYY'].dt.date <= end_date)
+        ]
 
-    st.subheader("CFTC Disaggregated Futures Only Reports")
-    # Show plot
-    st.markdown(disaggregated_explanation_1, unsafe_allow_html=True)
-    st.latex(r"\text{Gross Position} = \text{Long} + \text{Short} + 2 \times \text{Spread}")
-    st.markdown(disaggregated_explanation_2, unsafe_allow_html=True)
-    st.latex(r"\text{Gross Position} = \text{Long} + \text{Short}")
-    st.markdown(disaggregated_explanation_3, unsafe_allow_html=True)
-    st.latex(r"\text{Category \%} = \frac{\text{Gross Position}}{2 \times \text{Open Interest}} \times 100")
-    st.markdown(disaggregated_explanation_4, unsafe_allow_html=True)
-
-    st.plotly_chart(create_plot(filtered_df), use_container_width=True)
-
-
-
-
-    # Data summary
-    # st.subheader("Data Summary")
-    # st.dataframe(filtered_df.tail(10), use_container_width=True)
+        # Plot
+        st.plotly_chart(create_plot(filtered_df), use_container_width=True)
 
 if __name__ == "__main__":
     main()
