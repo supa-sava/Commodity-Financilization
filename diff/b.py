@@ -1,48 +1,27 @@
-def process_commodity(commodity_name, df, tbill_returns):
-    """
-    Calculates the fully collateralized monthly return for a single commodity.
-
-    Args:
-        commodity_name (str): The name of the commodity column.
-        df (pd.DataFrame): The main DataFrame with daily futures data.
-        tbill_returns (pd.DataFrame): DataFrame with monthly T-bill returns.
-
-    Returns:
-        pd.DataFrame: A DataFrame with the collateralized monthly returns.
-    """
-    # 1. Get monthly closing prices using your existing function
-    monthly_prices = return_monthly(commodity_name, df)
-    
-    # 2. Calculate futures price return (excess return)
-    futures_returns = monthly_prices.pct_change().to_frame('futures_return')
-    
-    # 3. Determine inclusion and exclusion months using your functions
-    inclusion_month = determine_inclusion_month(monthly_prices)
+def process_commodity(commodity_name, tbill_returns, df):
+    monthly = return_monthly(commodity_name, df)
+    # Compute monthly futures return
+    futures_returns = monthly.pct_change()
+    # Determine index range for inclusion/exclusion
+    inclusion_month = determine_inclusion_month(monthly)
     if inclusion_month is None:
         print(f"[WARN] No valid data for {commodity_name}. Skipping.")
         return pd.DataFrame()
-        
-    exclusion_month = determine_exclusion_month(monthly_prices)
-    
-    # 4. Create an inclusion mask
+    exclusion_month = determine_exclusion_month(monthly)
+    if exclusion_month:
+        print(f"[INFO] for {commodity_name}: Exclusion month = {exclusion_month}")
     mask = (futures_returns.index >= inclusion_month) & (futures_returns.index <= exclusion_month)
-    futures_returns['included'] = mask
-    
-    # 5. Join with T-bill returns
-    # This aligns the T-bill return for each month with the futures return
-    combined_returns = futures_returns.join(tbill_returns)
-    
-    # 6. Calculate the collateralized return
-    # If a price is missing during an included period, fillna(0) makes its return 0.
-    # Then, add the T-bill return for that month.
-    collateralized_return = combined_returns['futures_return'].fillna(0) + combined_returns['monthly_return']
-    
-    # 7. Finalize returns: only apply returns to months where the commodity is included
-    final_returns = pd.DataFrame(index=combined_returns.index)
-    final_returns['return'] = np.where(
-        combined_returns['included'],
-        collateralized_return,
-        np.nan  # Set to NaN for months outside the inclusion period
-    )
-    
-    return final_returns
+    # Reindex tbill returns to match futures return index
+    tbill_aligned = tbill_returns.set_index('observation_date')['monthly_return'].reindex(futures_returns.index)
+    # Initialize output series
+    collateralized_return = pd.Series(index=futures_returns.index, dtype='float64')
+    # For included periods: futures return + tbill; if futures return is nan, use tbill only
+    for idx in futures_returns.index:
+        if mask.loc[idx]:
+            if not np.isnan(futures_returns.loc[idx]):
+                collateralized_return.loc[idx] = futures_returns.loc[idx] + tbill_aligned.loc[idx]
+            else:
+                collateralized_return.loc[idx] = tbill_aligned.loc[idx]
+        else:
+            collateralized_return.loc[idx] = np.nan
+    return collateralized_return.to_frame('return')

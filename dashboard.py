@@ -1,5 +1,7 @@
 # dashboard.py
 import streamlit as st
+import streamlit.components.v1 as components
+
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -218,13 +220,57 @@ def create_plot(df):
         yaxis=dict(range=[0, 100], tickvals=[0, 25, 50, 75, 100])
     )
     return fig
+
+def compute_changes(df, categories, date_col):
+    """Compute absolute and percentage change for each category between start and end of selected period."""
+    start_row = df[df[date_col] == df[date_col].min()].iloc[0]
+    end_row = df[df[date_col] == df[date_col].max()].iloc[0]
+    results = []
+    for name, _, col in categories:
+        start_val = start_row[col] * 100
+        end_val = end_row[col] * 100
+        abs_change = end_val - start_val
+        pct_change = (abs_change / start_val * 100) if start_val != 0 else float('nan')
+        results.append({
+            "Group": name,
+            "Start (%)": round(start_val, 2),
+            "End (%)": round(end_val, 2),
+            "Change (pp)": round(abs_change, 2),
+            "Change (%)": round(pct_change, 2)
+        })
+    # Total change
+    start_total = sum([start_row[col] for _, _, col in categories]) * 100
+    end_total = sum([end_row[col] for _, _, col in categories]) * 100
+    abs_total = end_total - start_total
+    pct_total = (abs_total / start_total * 100) if start_total != 0 else float('nan')
+    results.append({
+        "Group": "Total",
+        "Start (%)": round(start_total, 2),
+        "End (%)": round(end_total, 2),
+        "Change (pp)": round(abs_total, 2),
+        "Change (%)": round(pct_total, 2)
+    })
+    return pd.DataFrame(results)
+
+
 def main():
-    st.set_page_config(page_title="Commodity Futures Trader Dynamics: A dive into CFTC Data", layout="wide")
     
+    
+    st.set_page_config(page_title="Commodity Futures Trader Dynamics: A dive into CFTC Data", layout="wide")
+
+
+    # Embed KnightLab Timeline
+    components.iframe(
+        "https://cdn.knightlab.com/libs/timeline3/latest/embed/index.html?source=v2%3A2PACX-1vQlwoP4XJabMnq5UPcMta4ZD4B47S6RPOtOtkU8TmpjrUvLYgMKkPEKbai2XFulfk46tOKJHGZ80iqE&font=Default&lang=en&initial_zoom=0&width=100%25&height=650",
+        height=650
+        )
+
     st.title("Commodity Futures Trader Market Composition Dynamics: A dive into CFTC Data")
     st.markdown("""
     Interactive visualization of trader positions across major commodity futures markets
     """)
+
+
 
     # Load data
     df = load_data()
@@ -242,17 +288,39 @@ def main():
         # Date range filter
         min_date_simple = simple_df['Report_Date_as_MM_DD_YYYY'].min()
         max_date_simple = simple_df['Report_Date_as_MM_DD_YYYY'].max()
-        start_date_simple, end_date_simple = st.date_input(
-            "Select date range for Non-Disaggregated data:",
-            value=(min_date_simple, max_date_simple),
-            min_value=min_date_simple,
-            max_value=max_date_simple
+
+        allowed_dates = [
+            pd.to_datetime("1991-01-01"),
+            pd.to_datetime("2004-01-01"),
+            pd.to_datetime("2015-01-01"),
+            pd.to_datetime("2025-03-01"),
+        ]
+
+        start_date_simple = st.selectbox(
+            "Select START date for Non-Disaggregated data:",
+            options=allowed_dates,
+            format_func=lambda d: d.strftime("%Y-%m-%d"),
+            index=0,
+            key="start_date_simple"
         )
+        end_date_simple = st.selectbox(
+            "Select END date for Non-Disaggregated data:",
+            options=allowed_dates,
+            format_func=lambda d: d.strftime("%Y-%m-%d"),
+            index=len(allowed_dates) - 1,
+            key="end_date_simple"
+        )
+
+        # Ensure start_date_simple <= end_date_simple
+        if start_date_simple > end_date_simple:
+            st.warning("Start date must be before or equal to end date.")
+
+        
 
         # Filter data
         filtered_simple_df = simple_df[
-            (simple_df['Report_Date_as_MM_DD_YYYY'].dt.date >= start_date_simple) &
-            (simple_df['Report_Date_as_MM_DD_YYYY'].dt.date <= end_date_simple)
+            (simple_df['Report_Date_as_MM_DD_YYYY'] >= pd.Timestamp(start_date_simple)) &
+            (simple_df['Report_Date_as_MM_DD_YYYY'] <= pd.Timestamp((end_date_simple)))
         ]
 
         # Plot
@@ -272,17 +340,46 @@ def main():
         # Date range filter
         min_date = df['Report_Date_as_MM_DD_YYYY'].min()
         max_date = df['Report_Date_as_MM_DD_YYYY'].max()
-        start_date, end_date = st.date_input(
-            "Select date range for Disaggregated data:",
-            value=(min_date, max_date),
-            min_value=min_date,
-            max_value=max_date
+
+        allowed_dates = [
+            pd.to_datetime("1991-01-01"),
+            pd.to_datetime("2004-01-01"),
+            pd.to_datetime("2015-01-01"),
+            pd.to_datetime("2025-03-01"),
+        ]
+
+        # data range selector:
+        start_date = st.selectbox(
+            "Select START date for Non-Disaggregated data:",
+            options=allowed_dates,
+            format_func=lambda d: d.strftime("%Y-%m-%d"),
+            index=0,
+            key="start_date_disagg"
+
         )
+        end_date = st.selectbox(
+            "Select END date for Non-Disaggregated data:",
+            options=allowed_dates,
+            format_func=lambda d: d.strftime("%Y-%m-%d"),
+            index=len(allowed_dates) - 1,
+            key="end_date_disagg"
+        )
+
+        # Ensure start_date_simple <= end_date_simple
+        if start_date > end_date:
+            st.warning("Start date must be before or equal to end date.")
+
+        # start_date, end_date = st.date_input(
+        #     "Select date range for Disaggregated data:",
+        #     value=(min_date, max_date),
+        #     min_value=min_date,
+        #     max_value=max_date
+        # )
 
         # Filter data
         filtered_df = df[
-            (df['Report_Date_as_MM_DD_YYYY'].dt.date >= start_date) &
-            (df['Report_Date_as_MM_DD_YYYY'].dt.date <= end_date)
+            (df['Report_Date_as_MM_DD_YYYY'] >= pd.Timestamp((start_date))) &
+            (df['Report_Date_as_MM_DD_YYYY'] <= pd.Timestamp((end_date)))
         ]
 
         # Plot
