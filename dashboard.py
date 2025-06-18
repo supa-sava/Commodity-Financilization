@@ -8,62 +8,66 @@ import plotly.graph_objects as go
 
 simple_explanation_1 = """
 #### Commodity Universe Selection
-We replicate Gorton & Rouwenhorst's (2006) 27-commodity universe using CFTC reports, filtering for these specific contracts:
-
+First, we replicate the commodity universe of the 
 <details>
-<summary>Energy (4 contracts)</summary>
+<summary>Energy (4 commodities)</summary>
 
-- `CRUDE OIL, LIGHT SWEET - NYMEX`  
-- `NO. 2 HEATING OIL, N.Y. HARBOR - NYMEX`  
-- `NATURAL GAS - NYMEX`  
-- `GASOLINE BLENDSTOCK (RBOB) - NYMEX`
+- `CRUDE OIL: Light Sweet Crude Oil (WTI) - NYMEX`
+- `GASOLINE: RBOB Gasoline - NYMEX`
+- `HEATING OIL: NY Harbor ULSD - NYMEX`
+- `NATURAL GAS: Henry Hub Natural Gas - NYMEX`
+
 </details>
 
 <details>
-<summary>Metals (5 contracts)</summary>
+<summary>Metals (5 commodities)</summary>
 
-- `GOLD - COMEX`  
-- `SILVER - COMEX`  
-- `COPPER-GRADE #1 - COMEX`  
-- `PLATINUM - NYMEX`  
-- `PALLADIUM - NYMEX`
+- `COPPER: Copper - COMEX`  
+- `GOLD: Gold - COMEX`
+- `PALLADIUM: Palladium - NYMEX`
+- `PLATINUM: Platinum - NYMEX`
+- `SILVER: Silver - COMEX`
+
 </details>
 
 <details>
-<summary>Grains (7 contracts)</summary>
+<summary>Grains & Oilseeds (7 commodities)</summary>
 
-- `CORN - CBOT`  
-- `WHEAT - CBOT`  
-- `SOYBEANS - CBOT`  
-- `SOYBEAN OIL - CBOT`  
-- `SOYBEAN MEAL - CBOT`  
-- `OATS - CBOT`  
-- `ROUGH RICE - CBOT`
+- `CORN: Corn Composite - CBoT`
+- `OATS: Oats - CBoT`
+- `ROUGH RICE: Rough Rice - CBoT`
+- `SOYBEANS: Soybeans - CBoT`
+- `SOYBEAN MEAL: Soybean Meal - CBoT`
+- `SOYBEAN OIL: Soybean Oil - CBoT`
+- `WHEAT: Wheat - CBoT`
+
 </details>
 
 <details>
-<summary>Livestock (3 contracts)</summary>
+<summary>Softs (5 commodities)</summary>
 
-- `LIVE CATTLE - CME`  
-- `LEAN HOGS - CME`  
-- `FEEDER CATTLE - CME`
+- `COCOA: Cocoa - ICE-US`
+- `COFFEE: Coffee C - ICE-US`
+- `COTTON: Cotton No. 2 - ICE-US`
+- `ORANGE JUICE: FCOJ-A - ICE-US`
+- `SUGAR: Sugar No. 11 - ICE-US`
+
 </details>
 
 <details>
-<summary>Softs (5 contracts)</summary>
+<summary>Animal Products (2)</summary>
 
-- `COTTON NO. 2 - NYBOT`  
-- `COFFEE C - NYBOT`  
-- `SUGAR NO. 11 - NYBOT`  
-- `COCOA - NYBOT`  
-- `FRZN CONCENTRATED ORANGE JUICE - ICE`
+- `LEAN HOGS: Lean Hogs - CME`
+- `LIVE CATTLE: Live Cattle - CME`
+
 </details>
 
-<details>
-<summary>Other (1 contract)</summary>
 
-- `MILK, Class III - CME`
-</details>
+
+## Index Return Calculation
+
+[UNDER CONSTRUCTION: TODO - DATA READY - NEED TO ADJUST VISUALS]
+
 
 #### Position Calculations
 
